@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import MainNav from "@/components/story-doctor/MainNav";
+import CategoryIcon from "@/components/story-doctor/CategoryIcon";
 import LanguageSelector from "@/components/story-doctor/LanguageSelector";
 import {
   useActiveCategories,
@@ -49,8 +50,11 @@ export default function HomePage() {
                 href={withLanguage(`/category/${category.slug}`, languageCode)}
                 className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs hover:border-blue-300"
               >
-                <div className="mb-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                  {category.iconKey}
+                <div className="mb-2 flex items-center gap-3">
+                  <CategoryIcon iconKey={category.iconKey} />
+                  <div className="inline-block rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                    {category.iconKey}
+                  </div>
                 </div>
                 <h2 className="text-lg font-semibold text-slate-900">{category.title}</h2>
                 <p className="mt-1 text-sm text-slate-600">{category.description}</p>

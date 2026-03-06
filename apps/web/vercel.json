@@ -1,4 +1,0 @@
-{
-  "installCommand": "cd ../.. && yarn install --frozen-lockfile",
-  "buildCommand": "cd ../../packages/backend && npx convex deploy --cmd 'cd ../../apps/web && turbo run build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL"
-}

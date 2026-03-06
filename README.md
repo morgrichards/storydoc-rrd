@@ -115,7 +115,7 @@ Removed old note/summary template logic from active app/backend flow.
 ## 1) Install
 
 ```bash
-yarn
+pnpm install
 ```
 
 ## 2) Convex deployment references
@@ -161,14 +161,14 @@ CONVEX_DEPLOYMENT=dev:acoustic-elk-437 npx convex run seed:seedStoryDoctorData '
 ## 5) Run apps
 
 ```bash
-yarn dev
+pnpm dev
 ```
 
 ## Validation Run
 
 Verified during this phase:
 
-- `yarn typecheck`
-- `yarn workspace web-app build`
+- `pnpm typecheck`
+- `pnpm --filter web-app build`
 
 Both passed.

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import MainNav from "@/components/story-doctor/MainNav";
 import AdminNav from "@/components/story-doctor/AdminNav";
+import CategoryIcon from "@/components/story-doctor/CategoryIcon";
 import StatusMessage from "@/components/story-doctor/StatusMessage";
 import {
   type CategoryId,
@@ -104,7 +105,7 @@ export default function AdminCategoriesPage() {
               className="rounded border border-slate-300 px-2 py-1"
               value={form.iconKey}
               onChange={(event) => setForm((current) => ({ ...current, iconKey: event.target.value }))}
-              placeholder="icon key"
+              placeholder="icon key (e.g. heart-pulse, people)"
             />
           </div>
           <textarea
@@ -113,6 +114,10 @@ export default function AdminCategoriesPage() {
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
             placeholder="description"
           />
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <CategoryIcon iconKey={form.iconKey} className="h-8 w-8" />
+            <span>Preview for icon key: {form.iconKey || "none"}</span>
+          </div>
           <div className="grid gap-2 md:grid-cols-4">
             <input
               className="rounded border border-slate-300 px-2 py-1"
@@ -167,7 +172,12 @@ export default function AdminCategoriesPage() {
                 <tr key={category._id} className="border-t border-slate-100">
                   <td className="px-3 py-2">{category.slug}</td>
                   <td className="px-3 py-2">{category.title}</td>
-                  <td className="px-3 py-2">{category.iconKey}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon iconKey={category.iconKey} className="h-8 w-8" />
+                      <span>{category.iconKey}</span>
+                    </div>
+                  </td>
                   <td className="px-3 py-2">{category.sortOrder}</td>
                   <td className="px-3 py-2">{category.active ? "yes" : "no"}</td>
                   <td className="px-3 py-2">

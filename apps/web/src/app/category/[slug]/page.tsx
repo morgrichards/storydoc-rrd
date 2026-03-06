@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import MainNav from "@/components/story-doctor/MainNav";
+import CategoryIcon from "@/components/story-doctor/CategoryIcon";
 import LanguageSelector from "@/components/story-doctor/LanguageSelector";
 import {
   useLanguages,
@@ -40,14 +41,17 @@ export default function CategoryPage() {
       <MainNav />
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <Link href={withLanguage("/", languageCode)} className="text-sm text-blue-700">
-              Back to categories
-            </Link>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-              {category?.title ?? "Category"}
-            </h1>
-            <p className="text-sm text-slate-600">{category?.description}</p>
+          <div className="flex items-start gap-3">
+            <CategoryIcon iconKey={category?.iconKey ?? "health"} className="mt-1" />
+            <div>
+              <Link href={withLanguage("/", languageCode)} className="text-sm text-blue-700">
+                Back to categories
+              </Link>
+              <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                {category?.title ?? "Category"}
+              </h1>
+              <p className="text-sm text-slate-600">{category?.description}</p>
+            </div>
           </div>
           {languages.length > 0 && (
             <LanguageSelector
