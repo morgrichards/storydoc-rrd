@@ -8,9 +8,12 @@
  * @module
  */
 
-import type * as notes from "../notes.js";
-import type * as openai from "../openai.js";
-import type * as utils from "../utils.js";
+import type * as categories from "../categories.js";
+import type * as languages from "../languages.js";
+import type * as seed from "../seed.js";
+import type * as storyDoctorShared from "../storyDoctorShared.js";
+import type * as videoVariants from "../videoVariants.js";
+import type * as videos from "../videos.js";
 
 import type {
   ApiFromModules,
@@ -19,9 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  notes: typeof notes;
-  openai: typeof openai;
-  utils: typeof utils;
+  categories: typeof categories;
+  languages: typeof languages;
+  seed: typeof seed;
+  storyDoctorShared: typeof storyDoctorShared;
+  videoVariants: typeof videoVariants;
+  videos: typeof videos;
 }>;
 
 /**

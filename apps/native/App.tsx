@@ -1,44 +1,68 @@
-import { View, StatusBar, Platform } from "react-native";
-import { useFonts } from "expo-font";
-import { LogBox } from "react-native";
-import Navigation from "./src/navigation/Navigation";
+import { StatusBar, StyleSheet, Text, View } from "react-native";
 import ConvexClientProvider from "./ConvexClientProvider";
+import { useQuery } from "convex/react";
+import { api } from "@packages/backend/convex/_generated/api";
+
+function StoryDoctorNativePlaceholder() {
+  const categories = useQuery(api.categories.listActiveCategories, {});
+
+  return (
+    <View style={styles.screen}>
+      <Text style={styles.title}>Story Doctor (Native Placeholder)</Text>
+      <Text style={styles.subtitle}>
+        Convex connection is active. Categories loaded:
+      </Text>
+      {(categories ?? []).map((category) => (
+        <Text key={category._id} style={styles.item}>
+          • {category.title}
+        </Text>
+      ))}
+      {!categories && <Text style={styles.loading}>Loading categories...</Text>}
+    </View>
+  );
+}
 
 export default function App() {
-  LogBox.ignoreLogs(["Warning: ..."]);
-  LogBox.ignoreAllLogs();
-
-  const [loaded] = useFonts({
-    Bold: require("./src/assets/fonts/Inter-Bold.ttf"),
-    SemiBold: require("./src/assets/fonts/Inter-SemiBold.ttf"),
-    Medium: require("./src/assets/fonts/Inter-Medium.ttf"),
-    Regular: require("./src/assets/fonts/Inter-Regular.ttf"),
-
-    MBold: require("./src/assets/fonts/Montserrat-Bold.ttf"),
-    MSemiBold: require("./src/assets/fonts/Montserrat-SemiBold.ttf"),
-    MMedium: require("./src/assets/fonts/Montserrat-Medium.ttf"),
-    MRegular: require("./src/assets/fonts/Montserrat-Regular.ttf"),
-    MLight: require("./src/assets/fonts/Montserrat-Light.ttf"),
-  });
-  if (!loaded) {
-    return false;
-  }
-
-  const STATUS_BAR_HEIGHT =
-    Platform.OS === "ios" ? 50 : StatusBar.currentHeight;
+  const barStyle = "dark-content";
 
   return (
     <ConvexClientProvider>
-      <View style={{ flex: 1 }}>
-        <View style={{ height: STATUS_BAR_HEIGHT, backgroundColor: "#0D87E1" }}>
-          <StatusBar
-            translucent
-            backgroundColor={"#0D87E1"}
-            barStyle="light-content"
-          />
-        </View>
-        <Navigation />
+      <View style={styles.container}>
+        <StatusBar barStyle={barStyle} />
+        <StoryDoctorNativePlaceholder />
       </View>
     </ConvexClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f4f7fb",
+  },
+  screen: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 64,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 12,
+    color: "#13253a",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#334e68",
+    marginBottom: 16,
+  },
+  item: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: "#243b53",
+  },
+  loading: {
+    fontSize: 14,
+    color: "#627d98",
+  },
+});
