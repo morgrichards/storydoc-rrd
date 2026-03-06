@@ -1,4 +1,0 @@
-{
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../../packages/backend && npx convex deploy --cmd 'cd ../../ && pnpm --filter web-app build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL"
-}
