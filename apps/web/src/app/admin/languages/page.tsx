@@ -3,35 +3,71 @@
 import { FormEvent, useState } from "react";
 import MainNav from "@/components/story-doctor/MainNav";
 import AdminNav from "@/components/story-doctor/AdminNav";
+import StatusMessage from "@/components/story-doctor/StatusMessage";
 import {
+  type LanguageId,
   useLanguages,
   useStoryDoctorMutations,
 } from "@/features/story-doctor/apiHooks";
+
+type LanguageForm = {
+  code: string;
+  name: string;
+  sortOrder: number;
+  active: boolean;
+};
+
+const initialForm: LanguageForm = {
+  code: "pt",
+  name: "Portuguese",
+  sortOrder: 7,
+  active: true,
+};
 
 export default function AdminLanguagesPage() {
   const languages = useLanguages(true);
   const { createLanguage, updateLanguage, deleteLanguage } = useStoryDoctorMutations();
 
-  const [code, setCode] = useState("pt");
-  const [name, setName] = useState("Portuguese");
-  const [sortOrder, setSortOrder] = useState(7);
-  const [active, setActive] = useState(true);
-  const [status, setStatus] = useState<string>("");
+  const [form, setForm] = useState<LanguageForm>(initialForm);
+  const [editingId, setEditingId] = useState<LanguageId | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<LanguageId | null>(null);
+  const [status, setStatus] = useState<{ tone: "info" | "error"; message: string }>({
+    tone: "info",
+    message: "",
+  });
 
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+  function resetForm() {
+    setForm(initialForm);
+    setEditingId(null);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("");
+    setStatus({ tone: "info", message: "" });
 
     try {
-      await createLanguage({
-        code,
-        name,
-        sortOrder,
-        active,
-      });
-      setStatus("Language created");
+      if (editingId) {
+        await updateLanguage({
+          languageId: editingId,
+          code: form.code,
+          name: form.name,
+          sortOrder: form.sortOrder,
+          active: form.active,
+        });
+        setStatus({ tone: "info", message: `Language updated: ${form.code}` });
+      } else {
+        await createLanguage({
+          code: form.code,
+          name: form.name,
+          sortOrder: form.sortOrder,
+          active: form.active,
+        });
+        setStatus({ tone: "info", message: `Language created: ${form.code}` });
+      }
+
+      resetForm();
     } catch (error) {
-      setStatus((error as Error).message);
+      setStatus({ tone: "error", message: (error as Error).message });
     }
   }
 
@@ -44,41 +80,57 @@ export default function AdminLanguagesPage() {
 
         <form
           className="mb-6 grid gap-2 rounded border border-slate-200 bg-white p-4 md:grid-cols-5"
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
         >
           <input
             className="rounded border border-slate-300 px-2 py-1"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
+            value={form.code}
+            onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
             placeholder="code"
           />
           <input
             className="rounded border border-slate-300 px-2 py-1"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            value={form.name}
+            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             placeholder="name"
           />
           <input
             className="rounded border border-slate-300 px-2 py-1"
             type="number"
-            value={sortOrder}
-            onChange={(event) => setSortOrder(Number(event.target.value))}
+            value={form.sortOrder}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                sortOrder: Number(event.target.value),
+              }))
+            }
             placeholder="sort order"
           />
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              checked={active}
-              onChange={(event) => setActive(event.target.checked)}
+              checked={form.active}
+              onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))}
             />
             Active
           </label>
-          <button className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white" type="submit">
-            Create
-          </button>
+          <div className="flex gap-2">
+            <button className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white" type="submit">
+              {editingId ? "Update" : "Create"}
+            </button>
+            {editingId && (
+              <button
+                className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
+                type="button"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
 
-        {status && <p className="mb-4 text-sm text-slate-700">{status}</p>}
+        <StatusMessage message={status.message} tone={status.tone} />
 
         <div className="overflow-x-auto rounded border border-slate-200 bg-white">
           <table className="min-w-full border-collapse text-left text-sm">
@@ -99,53 +151,62 @@ export default function AdminLanguagesPage() {
                   <td className="px-3 py-2">{language.sortOrder}</td>
                   <td className="px-3 py-2">{language.active ? "yes" : "no"}</td>
                   <td className="px-3 py-2">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         className="rounded border border-slate-300 px-2 py-1"
-                        onClick={async () => {
-                          const nextName = window.prompt("Name", language.name) ?? language.name;
-                          const nextCode = window.prompt("Code", language.code) ?? language.code;
-                          const nextSortOrder = Number(
-                            window.prompt("Sort order", String(language.sortOrder)) ??
-                              String(language.sortOrder),
-                          );
-                          const nextActive =
-                            (window.prompt("Active? true/false", String(language.active)) ?? "true") ===
-                            "true";
-
-                          try {
-                            await updateLanguage({
-                              languageId: language._id,
-                              name: nextName,
-                              code: nextCode,
-                              sortOrder: nextSortOrder,
-                              active: nextActive,
-                            });
-                            setStatus(`Updated ${language.code}`);
-                          } catch (error) {
-                            setStatus((error as Error).message);
-                          }
+                        type="button"
+                        onClick={() => {
+                          setPendingDeleteId(null);
+                          setEditingId(language._id);
+                          setForm({
+                            code: language.code,
+                            name: language.name,
+                            sortOrder: language.sortOrder,
+                            active: language.active,
+                          });
                         }}
                       >
                         Edit
                       </button>
-                      <button
-                        className="rounded border border-red-300 px-2 py-1 text-red-700"
-                        onClick={async () => {
-                          if (!window.confirm(`Delete language ${language.code}?`)) {
-                            return;
-                          }
 
-                          try {
-                            await deleteLanguage({ languageId: language._id });
-                            setStatus(`Deleted ${language.code}`);
-                          } catch (error) {
-                            setStatus((error as Error).message);
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
+                      {pendingDeleteId === language._id ? (
+                        <>
+                          <button
+                            className="rounded border border-red-300 px-2 py-1 text-red-700"
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await deleteLanguage({ languageId: language._id });
+                                setStatus({ tone: "info", message: `Language deleted: ${language.code}` });
+                              } catch (error) {
+                                setStatus({ tone: "error", message: (error as Error).message });
+                              } finally {
+                                setPendingDeleteId(null);
+                                if (editingId === language._id) {
+                                  resetForm();
+                                }
+                              }
+                            }}
+                          >
+                            Confirm Delete
+                          </button>
+                          <button
+                            className="rounded border border-slate-300 px-2 py-1"
+                            type="button"
+                            onClick={() => setPendingDeleteId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="rounded border border-red-300 px-2 py-1 text-red-700"
+                          type="button"
+                          onClick={() => setPendingDeleteId(language._id)}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

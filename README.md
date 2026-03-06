@@ -80,6 +80,7 @@ Implemented routes in `apps/web/src/app`:
 - `/video/[slug]`: metadata + available variants + placeholder player area
 
 Language selector/filter state is included to demonstrate language-aware structure and variant selection.
+Category and video views also surface fallback behavior when requested language variants are missing.
 
 ### 6. Minimal admin pages
 
@@ -91,7 +92,7 @@ Implemented in `apps/web/src/app/admin`:
 - `/admin/video-variants`
 - `/admin` (navigation + reseed trigger)
 
-Admin UI is intentionally basic (forms/tables + simple edit/delete actions).
+Admin UI is intentionally basic but now uses proper create/update forms and in-page two-step delete confirmation.
 
 ### 7. Expo app retained and wired to Convex
 

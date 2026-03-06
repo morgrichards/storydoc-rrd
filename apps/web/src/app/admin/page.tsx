@@ -1,12 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import MainNav from "@/components/story-doctor/MainNav";
 import AdminNav from "@/components/story-doctor/AdminNav";
+import StatusMessage from "@/components/story-doctor/StatusMessage";
 import { useStoryDoctorMutations } from "@/features/story-doctor/apiHooks";
 
 export default function AdminHomePage() {
   const { seedStoryDoctorData } = useStoryDoctorMutations();
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [status, setStatus] = useState<{ tone: "info" | "error"; message: string }>({
+    tone: "info",
+    message: "",
+  });
 
   return (
     <main>
@@ -17,12 +24,29 @@ export default function AdminHomePage() {
           Basic CRUD pages for Story Doctor content management.
         </p>
         <AdminNav />
+        <StatusMessage message={status.message} tone={status.tone} />
         <div className="flex flex-wrap gap-3">
           <button
             className="rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white"
-            onClick={() => seedStoryDoctorData({ resetExisting: true })}
+            disabled={isSeeding}
+            onClick={async () => {
+              setIsSeeding(true);
+              setStatus({ tone: "info", message: "" });
+
+              try {
+                const result = await seedStoryDoctorData({ resetExisting: true });
+                setStatus({
+                  tone: "info",
+                  message: `Reseeded: ${result.categories} categories, ${result.videosCreated} videos, ${result.videoVariantsCreated} variants.`,
+                });
+              } catch (error) {
+                setStatus({ tone: "error", message: (error as Error).message });
+              } finally {
+                setIsSeeding(false);
+              }
+            }}
           >
-            Reseed Demo Data
+            {isSeeding ? "Seeding..." : "Reseed Demo Data"}
           </button>
           <Link
             href="/"

@@ -38,19 +38,25 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category._id}
-              href={withLanguage(`/category/${category.slug}`, languageCode)}
-              className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs hover:border-blue-300"
-            >
-              <div className="mb-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                {category.iconKey}
-              </div>
-              <h2 className="text-lg font-semibold text-slate-900">{category.title}</h2>
-              <p className="mt-1 text-sm text-slate-600">{category.description}</p>
-            </Link>
-          ))}
+          {categories.length === 0 ? (
+            <div className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-600">
+              No active categories found yet. Seed data from the Admin page.
+            </div>
+          ) : (
+            categories.map((category) => (
+              <Link
+                key={category._id}
+                href={withLanguage(`/category/${category.slug}`, languageCode)}
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs hover:border-blue-300"
+              >
+                <div className="mb-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  {category.iconKey}
+                </div>
+                <h2 className="text-lg font-semibold text-slate-900">{category.title}</h2>
+                <p className="mt-1 text-sm text-slate-600">{category.description}</p>
+              </Link>
+            ))
+          )}
         </div>
       </section>
     </main>

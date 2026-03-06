@@ -28,6 +28,8 @@ export default function VideoPage() {
     : null;
 
   const activeVariants = video?.variants.filter((variant) => variant.active) ?? [];
+  const isLanguageFallback =
+    !!selectedVariant && selectedVariant.languageCode !== languageCode;
 
   return (
     <main>
@@ -57,12 +59,22 @@ export default function VideoPage() {
           )}
         </div>
 
-        <div className="mb-6 rounded-lg border border-dashed border-slate-300 bg-slate-100 p-6">
+        {!video ? (
+          <p className="mb-6 rounded border border-slate-200 bg-white p-4 text-sm text-slate-600">
+            Loading video...
+          </p>
+        ) : (
+          <div className="mb-6 rounded-lg border border-dashed border-slate-300 bg-slate-100 p-6">
           <div className="mb-2 text-sm font-medium text-slate-700">Player Placeholder</div>
           <div className="aspect-video rounded bg-slate-300" />
           <p className="mt-3 text-sm text-slate-700">
             Selected language: {selectedVariant?.languageCode ?? "none"}
           </p>
+          {isLanguageFallback && (
+            <p className="mt-1 text-xs font-medium text-amber-700">
+              Requested `{languageCode}` is unavailable. Falling back to `{selectedVariant?.languageCode}`.
+            </p>
+          )}
           <p className="mt-1 text-xs text-slate-600">
             Video URL: {selectedVariant?.videoUrl ?? "No dedicated file (shared animation mode)"}
           </p>
@@ -72,7 +84,8 @@ export default function VideoPage() {
           <p className="mt-1 text-xs text-slate-600">
             Subtitle URL: {selectedVariant?.subtitleUrl ?? "None"}
           </p>
-        </div>
+          </div>
+        )}
 
         <div className="rounded border border-slate-200 bg-white p-4">
           <h2 className="text-base font-semibold text-slate-900">Metadata</h2>
@@ -83,6 +96,9 @@ export default function VideoPage() {
           <p className="text-sm text-slate-600">
             Available language variants: {activeVariants.map((variant) => variant.languageCode).join(", ")}
           </p>
+          {video && activeVariants.length === 0 && (
+            <p className="mt-2 text-sm text-red-700">No active language variants found for this video.</p>
+          )}
         </div>
       </section>
     </main>

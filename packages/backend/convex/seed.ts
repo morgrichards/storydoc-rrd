@@ -1,6 +1,7 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 
 type SeedCategory = {
   slug: string;
@@ -239,7 +240,7 @@ const videoSeed: SeedVideo[] = [
 const optionalLanguageCodes = ["es", "fr", "ar", "sw", "vi"] as const;
 
 async function clearTable(
-  ctx: any,
+  ctx: MutationCtx,
   tableName: "videoVariants" | "videos" | "categories" | "languages",
 ) {
   const rows = await ctx.db.query(tableName).collect();

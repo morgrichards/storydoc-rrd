@@ -3,39 +3,79 @@
 import { FormEvent, useState } from "react";
 import MainNav from "@/components/story-doctor/MainNav";
 import AdminNav from "@/components/story-doctor/AdminNav";
+import StatusMessage from "@/components/story-doctor/StatusMessage";
 import {
+  type CategoryId,
   useAllCategories,
   useStoryDoctorMutations,
 } from "@/features/story-doctor/apiHooks";
+
+type CategoryForm = {
+  slug: string;
+  title: string;
+  description: string;
+  iconKey: string;
+  sortOrder: number;
+  active: boolean;
+};
+
+const initialForm: CategoryForm = {
+  slug: "community",
+  title: "Community",
+  description: "Community support resources.",
+  iconKey: "group",
+  sortOrder: 7,
+  active: true,
+};
 
 export default function AdminCategoriesPage() {
   const categories = useAllCategories();
   const { createCategory, updateCategory, deleteCategory } = useStoryDoctorMutations();
 
-  const [slug, setSlug] = useState("community");
-  const [title, setTitle] = useState("Community");
-  const [description, setDescription] = useState("Community support resources.");
-  const [iconKey, setIconKey] = useState("group");
-  const [sortOrder, setSortOrder] = useState(7);
-  const [active, setActive] = useState(true);
-  const [status, setStatus] = useState("");
+  const [form, setForm] = useState<CategoryForm>(initialForm);
+  const [editingId, setEditingId] = useState<CategoryId | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<CategoryId | null>(null);
+  const [status, setStatus] = useState<{ tone: "info" | "error"; message: string }>({
+    tone: "info",
+    message: "",
+  });
 
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+  function resetForm() {
+    setForm(initialForm);
+    setEditingId(null);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("");
+    setStatus({ tone: "info", message: "" });
 
     try {
-      await createCategory({
-        slug,
-        title,
-        description,
-        iconKey,
-        sortOrder,
-        active,
-      });
-      setStatus("Category created");
+      if (editingId) {
+        await updateCategory({
+          categoryId: editingId,
+          slug: form.slug,
+          title: form.title,
+          description: form.description,
+          iconKey: form.iconKey,
+          sortOrder: form.sortOrder,
+          active: form.active,
+        });
+        setStatus({ tone: "info", message: `Category updated: ${form.slug}` });
+      } else {
+        await createCategory({
+          slug: form.slug,
+          title: form.title,
+          description: form.description,
+          iconKey: form.iconKey,
+          sortOrder: form.sortOrder,
+          active: form.active,
+        });
+        setStatus({ tone: "info", message: `Category created: ${form.slug}` });
+      }
+
+      resetForm();
     } catch (error) {
-      setStatus((error as Error).message);
+      setStatus({ tone: "error", message: (error as Error).message });
     }
   }
 
@@ -46,55 +86,69 @@ export default function AdminCategoriesPage() {
         <h1 className="mb-4 text-2xl font-semibold text-slate-900">Admin: Categories</h1>
         <AdminNav />
 
-        <form className="mb-6 grid gap-2 rounded border border-slate-200 bg-white p-4" onSubmit={handleCreate}>
+        <form className="mb-6 grid gap-2 rounded border border-slate-200 bg-white p-4" onSubmit={handleSubmit}>
           <div className="grid gap-2 md:grid-cols-3">
             <input
               className="rounded border border-slate-300 px-2 py-1"
-              value={slug}
-              onChange={(event) => setSlug(event.target.value)}
+              value={form.slug}
+              onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
               placeholder="slug"
             />
             <input
               className="rounded border border-slate-300 px-2 py-1"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              value={form.title}
+              onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               placeholder="title"
             />
             <input
               className="rounded border border-slate-300 px-2 py-1"
-              value={iconKey}
-              onChange={(event) => setIconKey(event.target.value)}
+              value={form.iconKey}
+              onChange={(event) => setForm((current) => ({ ...current, iconKey: event.target.value }))}
               placeholder="icon key"
             />
           </div>
           <textarea
             className="rounded border border-slate-300 px-2 py-1"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            value={form.description}
+            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
             placeholder="description"
           />
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-4">
             <input
               className="rounded border border-slate-300 px-2 py-1"
               type="number"
-              value={sortOrder}
-              onChange={(event) => setSortOrder(Number(event.target.value))}
+              value={form.sortOrder}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  sortOrder: Number(event.target.value),
+                }))
+              }
             />
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
-                checked={active}
-                onChange={(event) => setActive(event.target.checked)}
+                checked={form.active}
+                onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))}
               />
               Active
             </label>
             <button className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white" type="submit">
-              Create
+              {editingId ? "Update" : "Create"}
             </button>
+            {editingId && (
+              <button
+                className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
+                type="button"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </form>
 
-        {status && <p className="mb-4 text-sm text-slate-700">{status}</p>}
+        <StatusMessage message={status.message} tone={status.tone} />
 
         <div className="overflow-x-auto rounded border border-slate-200 bg-white">
           <table className="min-w-full border-collapse text-left text-sm">
@@ -117,56 +171,64 @@ export default function AdminCategoriesPage() {
                   <td className="px-3 py-2">{category.sortOrder}</td>
                   <td className="px-3 py-2">{category.active ? "yes" : "no"}</td>
                   <td className="px-3 py-2">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         className="rounded border border-slate-300 px-2 py-1"
-                        onClick={async () => {
-                          const nextTitle = window.prompt("Title", category.title) ?? category.title;
-                          const nextDescription =
-                            window.prompt("Description", category.description) ?? category.description;
-                          const nextIconKey = window.prompt("Icon key", category.iconKey) ?? category.iconKey;
-                          const nextSortOrder = Number(
-                            window.prompt("Sort order", String(category.sortOrder)) ??
-                              String(category.sortOrder),
-                          );
-                          const nextActive =
-                            (window.prompt("Active? true/false", String(category.active)) ?? "true") ===
-                            "true";
-
-                          try {
-                            await updateCategory({
-                              categoryId: category._id,
-                              title: nextTitle,
-                              description: nextDescription,
-                              iconKey: nextIconKey,
-                              sortOrder: nextSortOrder,
-                              active: nextActive,
-                            });
-                            setStatus(`Updated ${category.slug}`);
-                          } catch (error) {
-                            setStatus((error as Error).message);
-                          }
+                        type="button"
+                        onClick={() => {
+                          setPendingDeleteId(null);
+                          setEditingId(category._id);
+                          setForm({
+                            slug: category.slug,
+                            title: category.title,
+                            description: category.description,
+                            iconKey: category.iconKey,
+                            sortOrder: category.sortOrder,
+                            active: category.active,
+                          });
                         }}
                       >
                         Edit
                       </button>
-                      <button
-                        className="rounded border border-red-300 px-2 py-1 text-red-700"
-                        onClick={async () => {
-                          if (!window.confirm(`Delete category ${category.slug}?`)) {
-                            return;
-                          }
 
-                          try {
-                            await deleteCategory({ categoryId: category._id });
-                            setStatus(`Deleted ${category.slug}`);
-                          } catch (error) {
-                            setStatus((error as Error).message);
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
+                      {pendingDeleteId === category._id ? (
+                        <>
+                          <button
+                            className="rounded border border-red-300 px-2 py-1 text-red-700"
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await deleteCategory({ categoryId: category._id });
+                                setStatus({ tone: "info", message: `Category deleted: ${category.slug}` });
+                              } catch (error) {
+                                setStatus({ tone: "error", message: (error as Error).message });
+                              } finally {
+                                setPendingDeleteId(null);
+                                if (editingId === category._id) {
+                                  resetForm();
+                                }
+                              }
+                            }}
+                          >
+                            Confirm Delete
+                          </button>
+                          <button
+                            className="rounded border border-slate-300 px-2 py-1"
+                            type="button"
+                            onClick={() => setPendingDeleteId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="rounded border border-red-300 px-2 py-1 text-red-700"
+                          type="button"
+                          onClick={() => setPendingDeleteId(category._id)}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
